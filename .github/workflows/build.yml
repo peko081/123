@@ -1,0 +1,47 @@
+name: Build AutoClicker
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    env:
+      THEOS: ${{ github.workspace }}/theos
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential fakeroot rsync perl curl zip unzip git libtinfo5 libncurses5 || true
+
+      - name: Set up Theos
+        run: |
+          git clone --recursive https://github.com/theos/theos.git "$THEOS"
+          # 下載 iOS SDK（sparse checkout 只取需要的版本）
+          git clone -n --depth=1 --filter=tree:0 https://github.com/theos/sdks.git /tmp/sdks
+          cd /tmp/sdks
+          git sparse-checkout set --no-cone iPhoneOS16.5.sdk
+          git checkout
+          mv *.sdk "$THEOS/sdks/"
+          # 安裝 Swift/LLVM 工具鏈（提供 iOS 交叉編譯 clang）
+          mkdir -p "$THEOS/toolchain"
+          curl -L https://github.com/kabiroberai/swift-toolchain-linux/releases/latest/download/swift-5.7-ubuntu22.04.tar.xz -o /tmp/toolchain.tar.xz
+          tar -xf /tmp/toolchain.tar.xz -C "$THEOS/toolchain"
+
+      - name: Build package
+        run: |
+          make clean || true
+          make package FINALPACKAGE=1
+
+      - name: Upload dylib + deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoClicker
+          path: |
+            .theos/obj/**/*.dylib
+            packages/*.deb
+          if-no-files-found: error

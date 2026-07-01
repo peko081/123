@@ -1,0 +1,9 @@
+Package: com.yourname.autoclicker
+Name: AutoClicker
+Version: 1.0.0
+Architecture: iphoneos-arm64
+Description: A non-jailbreak in-app auto clicker (inject yourself).
+Maintainer: yourname
+Author: yourname
+Section: Tweaks
+Depends: firmware (>= 15.0)

@@ -1,8 +1,8 @@
 #import <UIKit/UIKit.h>
 
-/// 以 IOHIDEvent 數位觸控事件在「當前 App 進程內」合成觸控。
-/// 適用於非越獄環境下自行注入的 dylib：事件直接進入本進程的事件迴圈，
-/// 對 UIKit / Unity / Cocos / Metal 遊戲相容性最佳。
+/// 以合成 UITouch + [UIApplication sendEvent:] 在「當前 App 進程內」注入觸控，
+/// 事件直接送往遊戲視窗（非懸浮視窗），對 UIKit / Unity 遊戲相容性最佳。
+/// 座標使用視窗座標，不需依螢幕方向做正規化換算。
 @interface ACTouchEngine : NSObject
 
 + (instancetype)shared;

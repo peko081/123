@@ -6,6 +6,9 @@
 typedef uint32_t IOHIDDigitizerTransducerType;
 typedef double IOHIDFloat;
 typedef struct __IOHIDEvent *IOHIDEventRef;
+#ifndef IOOptionBits
+typedef uint32_t IOOptionBits;
+#endif
 
 // 數位觸控事件遮罩
 enum {

@@ -54,7 +54,6 @@
 @property (nonatomic, strong) UIButton *recordButton;
 @property (nonatomic, strong) UILabel *intervalLabel;
 @property (nonatomic, strong) UILabel *countLabel;
-@property (nonatomic, strong) UISegmentedControl *modeControl;
 @property (nonatomic, strong) UILabel *debugLabel;
 @end
 
@@ -124,10 +123,8 @@
     root.ball = self.ball;
     root.panel = self.panel;
 
+    // 只顯示、不搶 key window（AutoTouch 依 keyWindow 找遊戲視窗，必須讓遊戲維持 key）
     self.hidden = NO;
-    [self makeKeyAndVisible];
-    // 不搶奪按鍵焦點
-    [self resignKeyWindow];
 }
 
 #pragma mark - 懸浮球
@@ -212,19 +209,6 @@
     [panel addSubview:slider];
     y += 34;
 
-    UILabel *modeTitle = [self labelWithFrame:CGRectMake(12, y, W, 18) text:@"派送方式："];
-    [panel addSubview:modeTitle];
-    y += 22;
-
-    self.modeControl = [[UISegmentedControl alloc] initWithItems:@[@"UITouch", @"HID", @"兩者"]];
-    self.modeControl.frame = CGRectMake(12, y, W, 30);
-    self.modeControl.selectedSegmentIndex = [ACTouchEngine shared].deliveryMode;
-    self.modeControl.selectedSegmentTintColor = [UIColor systemBlueColor];
-    [self.modeControl setTitleTextAttributes:@{NSForegroundColorAttributeName:[UIColor whiteColor]} forState:UIControlStateNormal];
-    [self.modeControl addTarget:self action:@selector(onModeChange:) forControlEvents:UIControlEventValueChanged];
-    [panel addSubview:self.modeControl];
-    y += 38;
-
     UIButton *test = [self buttonWithFrame:CGRectMake(12, y, W, 34)
                                      title:@"測試點擊（螢幕中央）"
                                      color:[UIColor systemPurpleColor]
@@ -294,11 +278,6 @@
 - (void)onClear {
     [[ACManager shared] clearPoints];
     [self refreshMarkers];
-    [self refreshUI];
-}
-
-- (void)onModeChange:(UISegmentedControl *)c {
-    [ACTouchEngine shared].deliveryMode = (ACDeliveryMode)c.selectedSegmentIndex;
     [self refreshUI];
 }
 

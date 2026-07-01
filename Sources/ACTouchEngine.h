@@ -3,7 +3,7 @@
 typedef NS_ENUM(NSInteger, ACDeliveryMode) {
     ACDeliveryModeUITouch = 0,  // 合成 UITouch（附掛 HID 背景事件）+ sendEvent
     ACDeliveryModeHID     = 1,  // 純 IOHIDEvent enqueue
-    ACDeliveryModeBoth    = 2,  // 兩者都送
+    ACDeliveryModeDirect  = 2,  // 直接呼叫命中視圖的 touchesBegan/Moved/Ended
 };
 
 /// 在「當前 App 進程內」注入觸控，對 UIKit / Unity 遊戲相容。

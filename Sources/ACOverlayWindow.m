@@ -1,5 +1,6 @@
 #import "ACOverlayWindow.h"
 #import "ACManager.h"
+#import "ACTouchEngine.h"
 
 #pragma mark - 穿透用根視圖
 
@@ -53,6 +54,8 @@
 @property (nonatomic, strong) UIButton *recordButton;
 @property (nonatomic, strong) UILabel *intervalLabel;
 @property (nonatomic, strong) UILabel *countLabel;
+@property (nonatomic, strong) UISegmentedControl *modeControl;
+@property (nonatomic, strong) UILabel *debugLabel;
 @end
 
 @implementation ACOverlayWindow
@@ -167,49 +170,83 @@
 #pragma mark - 設定面板
 
 - (void)buildPanel {
-    UIView *panel = [[UIView alloc] initWithFrame:CGRectMake(20, 190, 240, 260)];
-    panel.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.8];
+    CGFloat maxH = MAX(240, self.bounds.size.height - 90);
+    CGFloat panelH = MIN(466, maxH);
+    UIScrollView *panel = [[UIScrollView alloc] initWithFrame:CGRectMake(20, 60, 250, panelH)];
+    panel.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.82];
     panel.layer.cornerRadius = 12;
+    panel.showsVerticalScrollIndicator = YES;
     panel.hidden = YES;
 
+    CGFloat W = 226;
     CGFloat y = 12;
 
-    self.countLabel = [self labelWithFrame:CGRectMake(12, y, 216, 20) text:@"點位：0"];
+    self.countLabel = [self labelWithFrame:CGRectMake(12, y, W, 20) text:@"點位：0"];
     [panel addSubview:self.countLabel];
-    y += 28;
+    y += 26;
 
-    self.startButton = [self buttonWithFrame:CGRectMake(12, y, 216, 40)
+    self.startButton = [self buttonWithFrame:CGRectMake(12, y, W, 38)
                                        title:@"▶ 開始"
                                        color:[UIColor systemGreenColor]
                                       action:@selector(onStart)];
     [panel addSubview:self.startButton];
-    y += 48;
+    y += 44;
 
-    self.recordButton = [self buttonWithFrame:CGRectMake(12, y, 216, 40)
+    self.recordButton = [self buttonWithFrame:CGRectMake(12, y, W, 38)
                                         title:@"＋ 錄製點位"
                                         color:[UIColor systemOrangeColor]
                                        action:@selector(onRecordToggle)];
     [panel addSubview:self.recordButton];
-    y += 48;
+    y += 44;
 
-    self.intervalLabel = [self labelWithFrame:CGRectMake(12, y, 216, 20)
+    self.intervalLabel = [self labelWithFrame:CGRectMake(12, y, W, 20)
         text:[NSString stringWithFormat:@"間隔：%ld ms", (long)[ACManager shared].defaultIntervalMs]];
     [panel addSubview:self.intervalLabel];
-    y += 24;
+    y += 22;
 
-    UISlider *slider = [[UISlider alloc] initWithFrame:CGRectMake(12, y, 216, 30)];
+    UISlider *slider = [[UISlider alloc] initWithFrame:CGRectMake(12, y, W, 28)];
     slider.minimumValue = 10;
     slider.maximumValue = 1000;
     slider.value = [ACManager shared].defaultIntervalMs;
     [slider addTarget:self action:@selector(onSlider:) forControlEvents:UIControlEventValueChanged];
     [panel addSubview:slider];
+    y += 34;
+
+    UILabel *modeTitle = [self labelWithFrame:CGRectMake(12, y, W, 18) text:@"派送方式："];
+    [panel addSubview:modeTitle];
+    y += 22;
+
+    self.modeControl = [[UISegmentedControl alloc] initWithItems:@[@"UITouch", @"HID", @"兩者"]];
+    self.modeControl.frame = CGRectMake(12, y, W, 30);
+    self.modeControl.selectedSegmentIndex = [ACTouchEngine shared].deliveryMode;
+    self.modeControl.selectedSegmentTintColor = [UIColor systemBlueColor];
+    [self.modeControl setTitleTextAttributes:@{NSForegroundColorAttributeName:[UIColor whiteColor]} forState:UIControlStateNormal];
+    [self.modeControl addTarget:self action:@selector(onModeChange:) forControlEvents:UIControlEventValueChanged];
+    [panel addSubview:self.modeControl];
     y += 38;
 
-    UIButton *clear = [self buttonWithFrame:CGRectMake(12, y, 216, 36)
+    UIButton *test = [self buttonWithFrame:CGRectMake(12, y, W, 34)
+                                     title:@"測試點擊（螢幕中央）"
+                                     color:[UIColor systemPurpleColor]
+                                    action:@selector(onTest)];
+    [panel addSubview:test];
+    y += 40;
+
+    UIButton *clear = [self buttonWithFrame:CGRectMake(12, y, W, 32)
                                       title:@"清除全部"
                                       color:[UIColor systemRedColor]
                                      action:@selector(onClear)];
     [panel addSubview:clear];
+    y += 38;
+
+    self.debugLabel = [self labelWithFrame:CGRectMake(12, y, W, 96) text:@""];
+    self.debugLabel.numberOfLines = 0;
+    self.debugLabel.font = [UIFont systemFontOfSize:10];
+    self.debugLabel.textColor = [UIColor systemGreenColor];
+    [panel addSubview:self.debugLabel];
+    y += 100;
+
+    panel.contentSize = CGSizeMake(250, y);
 
     [self.rootView addSubview:panel];
     self.panel = panel;
@@ -260,6 +297,16 @@
     [self refreshUI];
 }
 
+- (void)onModeChange:(UISegmentedControl *)c {
+    [ACTouchEngine shared].deliveryMode = (ACDeliveryMode)c.selectedSegmentIndex;
+    [self refreshUI];
+}
+
+- (void)onTest {
+    [[ACTouchEngine shared] testTapAtCenter];
+    [self refreshUI];
+}
+
 #pragma mark - UI 更新
 
 - (void)refreshUI {
@@ -272,6 +319,8 @@
     self.recordButton.backgroundColor = rec ? [UIColor systemTealColor] : [UIColor systemOrangeColor];
 
     self.countLabel.text = [NSString stringWithFormat:@"點位：%lu", (unsigned long)[ACManager shared].points.count];
+
+    self.debugLabel.text = [[ACTouchEngine shared] diagnostics];
 }
 
 - (void)refreshMarkers {

@@ -66,6 +66,14 @@
     return inst;
 }
 
+// 視窗層級穿透：空白處（命中視窗自身）一律放行給底層遊戲，
+// 只有懸浮球 / 面板 / 錄製攔截層才吃觸控。
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+    UIView *hit = [super hitTest:point withEvent:event];
+    if (hit == self) return nil;
+    return hit;
+}
+
 + (void)show {
     // 延遲等待 UI 就緒
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)),

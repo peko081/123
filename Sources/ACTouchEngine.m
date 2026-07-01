@@ -59,14 +59,16 @@ extern void IOHIDEventAppendEvent(IOHIDEventRef event, IOHIDEventRef childEvent,
 
 #pragma mark - 座標正規化
 
-// 數位觸控事件使用 0.0~1.0 的正規化座標，並需考慮螢幕方向。
+// 數位觸控事件使用 0.0~1.0 的正規化座標，且以「實體直向」為基準。
+// 用 fixedCoordinateSpace 轉換，可自動處理橫向 / 反向等各種螢幕方向。
 - (CGPoint)normalizePoint:(CGPoint)point {
-    CGRect bounds = [UIScreen mainScreen].bounds;
-    CGFloat w = bounds.size.width;
-    CGFloat h = bounds.size.height;
-    if (w <= 0 || h <= 0) return CGPointMake(0, 0);
-    CGFloat nx = point.x / w;
-    CGFloat ny = point.y / h;
+    UIScreen *screen = [UIScreen mainScreen];
+    CGPoint fixed = [screen.coordinateSpace convertPoint:point
+                                       toCoordinateSpace:screen.fixedCoordinateSpace];
+    CGRect b = screen.fixedCoordinateSpace.bounds;
+    if (b.size.width <= 0 || b.size.height <= 0) return CGPointMake(0, 0);
+    CGFloat nx = fixed.x / b.size.width;
+    CGFloat ny = fixed.y / b.size.height;
     if (nx < 0) nx = 0; else if (nx > 1) nx = 1;
     if (ny < 0) ny = 0; else if (ny > 1) ny = 1;
     return CGPointMake(nx, ny);

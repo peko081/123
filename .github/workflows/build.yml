@@ -29,7 +29,7 @@ jobs:
           mv *.sdk "$THEOS/sdks/"
           # 安裝 Swift/LLVM 工具鏈（提供 iOS 交叉編譯 clang）
           mkdir -p "$THEOS/toolchain"
-          curl -L https://github.com/kabiroberai/swift-toolchain-linux/releases/latest/download/swift-5.7-ubuntu22.04.tar.xz -o /tmp/toolchain.tar.xz
+          curl -fL https://github.com/kabiroberai/swift-toolchain-linux/releases/download/v2.3.0/swift-5.8-ubuntu22.04.tar.xz -o /tmp/toolchain.tar.xz
           tar -xf /tmp/toolchain.tar.xz -C "$THEOS/toolchain"
 
       - name: Build package
